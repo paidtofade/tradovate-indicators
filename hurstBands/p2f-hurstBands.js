@@ -23,7 +23,7 @@ const p = require("./tools/plotting");
 class p2fHurstBands {
     init() {
         this.priceOffset = Math.floor(this.props.period / 2) + 1;
-        this.lookForward = !!this.props.lookForward;
+        this.lookForward = !!this.props.useNonStandardLookForward;
         if (this.lookForward) {
             this.priceOffset = -Math.floor(this.props.period / 2) + 1;
         }
@@ -40,8 +40,8 @@ class p2fHurstBands {
                 this.getPriceVal = (d) => d.low();
             case 'open':
                 this.getPriceVal = (d) => d.open();
-            case 'low':
-                this.getPriceVal = (d) => d.low();
+            case 'close':
+                this.getPriceVal = (d) => d.close();
             case 'hl2':
             default:
                 this.getPriceVal = (d) => medianPrice(d);
@@ -139,7 +139,7 @@ module.exports = {
         outerValue: predef.paramSpecs.number(2.6, 0.1, 0),
         extremeValue: predef.paramSpecs.number(4.2, 0.1, 0),
         drawCloud: predef.paramSpecs.bool(true),
-        lookForward: predef.paramSpecs.bool(true)
+        useNonStandardLookForward: predef.paramSpecs.bool(false)
     },
     plots: {
         middle: { title: "Middle" },
