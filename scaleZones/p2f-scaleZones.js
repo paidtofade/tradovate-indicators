@@ -19,7 +19,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 const predef = require("./tools/predef");
-const SMA = require("./tools/SMA");
 const p = require("./tools/plotting");
 
 class p2fScaleZones {
