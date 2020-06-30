@@ -33,6 +33,22 @@ class p2fScaleZones {
             this.props.rangeThreeDistance,
             this.props.rangeFourDistance
         ];
+        
+        // Sort out range scale... could be a constant so just
+        // calculate once. But "percent" will be based off of
+        // the center, which could be changing.
+        this.rangeScaler = null;
+        switch (this.props.rangeScale) {
+            case "percent":
+            case "basis_pts":
+                this.rangeScaler = this.props.rangeScale;
+                break;
+            case "ticks":
+                this.rangeScaler = this.contractInfo.tickSize;
+                break;
+            default:
+                this.rangeScaler = parseFloat(this.props.rangeScale);
+        }
     }
     
     sumThrough(arr, index) {
@@ -93,16 +109,28 @@ class p2fScaleZones {
         const distanceThree = this.sumThrough(this.rangeAmounts, 3);
         const distanceFour = this.sumThrough(this.rangeAmounts, 4);
         
+        let scaler = this.rangeScaler;
+        
+        // If not a number, implies a dynamic scale (i.e. percent based)
+        if (isNaN(scaler)) {
+            console.log(this.rangeScaler);
+            if (this.rangeScaler === "percent") {
+                scaler = center / 100.0;
+            } else if (this.rangeScaler === "basis_pts") {
+                scaler = center / 10000.0;
+            }
+        }
+        
         return {
             center: center,
-            upperRangeOne: center + distanceOne,
-            lowerRangeOne: center - distanceOne,
-            upperRangeTwo: center + distanceTwo,
-            lowerRangeTwo: center - distanceTwo,
-            upperRangeThree: center + distanceThree,
-            lowerRangeThree: center - distanceThree,
-            upperRangeFour: center + distanceFour,
-            lowerRangeFour: center - distanceFour,
+            upperRangeOne: center + (distanceOne * scaler),
+            lowerRangeOne: center - (distanceOne * scaler),
+            upperRangeTwo: center + (distanceTwo * scaler),
+            lowerRangeTwo: center - (distanceTwo * scaler),
+            upperRangeThree: center + (distanceThree * scaler),
+            lowerRangeThree: center - (distanceThree * scaler),
+            upperRangeFour: center + (distanceFour * scaler),
+            lowerRangeFour: center - (distanceFour * scaler),
         }
     }
 }
@@ -201,10 +229,20 @@ module.exports = {
     description: "p2f - Scale Zones",
     calculator: p2fScaleZones,
     params: {
-        rangeOneDistance: predef.paramSpecs.number(20, 0.1, 0),
-        rangeTwoDistance: predef.paramSpecs.number(20, 0.1, 0),
-        rangeThreeDistance: predef.paramSpecs.number(20, 0.1, 0),
-        rangeFourDistance: predef.paramSpecs.number(40, 0.1, 0),
+        rangeScale: predef.paramSpecs.enum({
+            "1.0": "1",
+            "0.1": "0.1",
+            "0.01": "0.01",
+            "0.001": "0.001",
+            "0.0001": "0.0001",
+            "ticks": "Ticks",
+            "percent": "Percent",
+            "basis_pts": "Basis Pts"
+        }, "1.0"),
+        rangeOneDistance: predef.paramSpecs.number(20, 1, 0),
+        rangeTwoDistance: predef.paramSpecs.number(20, 1, 0),
+        rangeThreeDistance: predef.paramSpecs.number(20, 1, 0),
+        rangeFourDistance: predef.paramSpecs.number(40, 1, 0),
         rangeOneColor: predef.paramSpecs.color("red"),
         rangeTwoColor: predef.paramSpecs.color("yellow"),
         rangeThreeColor: predef.paramSpecs.color("green"),
