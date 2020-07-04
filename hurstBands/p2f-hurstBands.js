@@ -37,12 +37,16 @@ class p2fHurstBands {
         switch (this.props.priceType) {
             case 'high':
                 this.getPriceVal = (d) => d.high();
+                break;
             case 'low':
                 this.getPriceVal = (d) => d.low();
+                break;
             case 'open':
                 this.getPriceVal = (d) => d.open();
+                break;
             case 'close':
                 this.getPriceVal = (d) => d.close();
+                break;
             case 'hl2':
             default:
                 this.getPriceVal = (d) => medianPrice(d);
