@@ -17,6 +17,7 @@
 
 const predef = require("./tools/predef");
 const meta = require("./tools/meta");
+const medianPrice = require('./tools/medianPrice');
 
 class p2fKama {
     init() {
@@ -24,7 +25,25 @@ class p2fKama {
         this.fastSf = 2.0 / (this.props.fastLength + 1);
         this.slowSf = 2.0 / (this.props.slowLength + 1);
         this.lastKama = undefined;
-        this.getPriceVal = d => d.close();
+        
+         // Choose what price type we're using
+        switch (this.props.priceType) {
+            case 'high':
+                this.getPriceVal = (d) => d.high();
+                break;
+            case 'low':
+                this.getPriceVal = (d) => d.low();
+                break;
+            case 'open':
+                this.getPriceVal = (d) => d.open();
+                break;
+            case 'hl2':
+                this.getPriceVal = (d) => medianPrice(d);
+                break;
+            case 'close':
+            default:
+                this.getPriceVal = (d) => d.close();
+        }
     }
     
     sumDifferences(data) {
@@ -65,6 +84,13 @@ module.exports = {
     calculator: p2fKama,
     inputType: meta.InputType.BARS,
     params: {
+        priceType: predef.paramSpecs.enum({
+            high: 'High', 
+            low: 'Low', 
+            open: 'Open', 
+            close: 'Close', 
+            hl2: '(H+L)/2'
+        }, 'close'),
         fastLength: predef.paramSpecs.period(2),
         slowLength: predef.paramSpecs.period(30),
         efficiencyRatioLength: predef.paramSpecs.period(10)
