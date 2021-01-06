@@ -106,9 +106,9 @@ module.exports = {
         deviationChannel: predef.paramSpecs.number(2, 0.1, 0)
     },
     plots: {
-        middle: { title: "Middle 2" },
-        upper: { title: "Upper" },
-        lower: { title: "Lower" }
+        middle: { title: "VWAP" },
+        upper: { title: "Upper Band" },
+        lower: { title: "Lower Band" }
     },
      plotter: [
         predef.plotters.singleline("middle"),
@@ -128,6 +128,6 @@ module.exports = {
             }),
         }
     },
-    tags: ["paidtofade", predef.tags.Channels]
+    tags: ["paidtofade", predef.tags.Volumes]
 };
 
