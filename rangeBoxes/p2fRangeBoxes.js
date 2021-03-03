@@ -11,9 +11,6 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 const meta = require("./tools/meta");
 const predef = require("./tools/predef");
@@ -22,6 +19,7 @@ const p = require("./tools/plotting");
 const DEBUG = false;
 const minuteMillis = 1000 * 60;
 const hourMillis = minuteMillis * 60;
+const dayMillis = hourMillis * 24;
 
 function inspectObject(obj) {
     if (DEBUG) {
@@ -31,24 +29,82 @@ function inspectObject(obj) {
     }
 }
 
-class p2fRangeBoxes {
+class p2fRangeBoxes2 {
     init() {
         this.timeInterval = minuteMillis * this.props.rangeMinutes;
         this.hourAlignOffset = this.getHourAlignOffset();
+
+        this.rangeType = this.props.rangeType;
+        this.rangeAmount = this.props.rangeAmount;
+        this.isFixedRange = 
+            ['minutes', 'hours', 'days', 'weeks'].includes(this.rangeType);
     }
     
     getHourAlignOffset() {
         const adjustedHour = this.props.alignToHour % 24;
         const d = new Date();
-        const offsetDate = new Date(
+        const dayBeginningWeek = d.getTimezoneOffset() > 0 ? 0 : 1;
+        
+        let offsetDate = new Date(
             d.getFullYear(), d.getMonth(), d.getDate(),
             adjustedHour, 0, 0, 0);
+            
+        while (offsetDate.getDay() !== dayBeginningWeek) {
+            offsetDate = new Date(offsetDate.getTime() - dayMillis);
+        }
             
         return offsetDate.getTime() - 1;
     }
     
     getRangeId(data) {
-        return parseInt((data.date.getTime() - this.hourAlignOffset) / this.timeInterval);
+
+        const d = data.date;
+
+        if (this.isFixedRange) { 
+
+            let interval = 1;
+        
+            switch (this.rangeType) {
+                case 'minutes':
+                    interval = minuteMillis;
+                    break;
+                    
+                case 'hours':
+                    interval = hourMillis;
+                    break;
+                    
+                case 'days':
+                    interval = dayMillis;
+                    break;
+                    
+                case 'weeks':
+                    interval = dayMillis * 7;
+                    break;
+            }
+            
+        
+            let rangeId = Math.floor(
+                (d.getTime() - this.hourAlignOffset) 
+                / (this.props.rangeAmount * interval));
+            
+            return rangeId;
+                
+        } else {
+            switch (this.rangeType) {
+                
+                case 'months':
+                    
+                    return [
+                        d.getUTCFullYear(),  
+                        Math.floor(d.getUTCMonth() / this.props.rangeAmount)
+                    ].join('-');
+                    
+                case 'years':
+                    
+                    return '' + Math.floor(d.getUTCFullYear() / this.props.rangeAmount);
+            }
+        }
+        
     }
 
     map(d, i, history) {
@@ -204,12 +260,20 @@ function getAlignToHourDefault() {
 }
 
 module.exports = {
-    name: "p2f - Overlay Range Boxes",
-    description: "p2f - Overlay Range Boxes",
-    calculator: p2fRangeBoxes,
+    name: "p2f - Overlay Range Boxes 2",
+    description: "p2f - Overlay Range Boxes 2",
+    calculator: p2fRangeBoxes2,
     inputType: meta.InputType.BARS,
     params: {
-        rangeMinutes: predef.paramSpecs.number(30, 1, 0),
+        rangeType: predef.paramSpecs.enum({
+            minutes: 'Minutes',
+            hours: 'Hours',
+            days: 'Days',
+            weeks: 'Weeks',
+            months: 'Months',
+            years: 'Years'
+        }, 'minutes'),
+        rangeAmount: predef.paramSpecs.number(30, 1, 0),
         alignToHour: predef.paramSpecs.number(getAlignToHourDefault(), 1, 0),
         upColor: predef.paramSpecs.color("green"),
         downColor: predef.paramSpecs.color("red"),
